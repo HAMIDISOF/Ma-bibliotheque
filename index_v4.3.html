@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ma Bibliothèque</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:   #f7f4ef;
+  --paper2:  #edeae3;
+  --ink:     #1a1814;
+  --ink2:    #3d3a34;
+  --ink3:    #6b6760;
+  --rule:    #d4cfc6;
+  --accent:  #8b3a2a;
+  --accent2: #c0692d;
+  --gold:    #b8963e;
+  --radius:  4px;
+  --shadow:  0 2px 12px rgba(26,24,20,.10);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 3px solid var(--accent);
+}
+.logo {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: .5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo span { color: var(--gold); font-style: italic; }
+.header-right { display: flex; gap: 10px; align-items: center; }
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: calc(100vh - 64px);
+}
+
+/* ── SIDEBAR ── */
+aside {
+  background: var(--paper2);
+  border-right: 1px solid var(--rule);
+  padding: 28px 20px;
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+}
+.sidebar-section { margin-bottom: 28px; }
+.sidebar-label {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--ink3);
+  font-weight: 500;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule);
+}
+.filter-group { display: flex; flex-direction: column; gap: 3px; }
+.filter-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: .88rem;
+  color: var(--ink2);
+  transition: background .15s;
+  border: none;
+  background: none;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+}
+.filter-item:hover { background: var(--rule); }
+.filter-item.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+.filter-count {
+  font-size: .75rem;
+  color: var(--ink3);
+  background: var(--paper);
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 24px;
+  text-align: center;
+}
+.filter-item.active .filter-count {
+  background: rgba(255,255,255,.15);
+  color: var(--paper);
+}
+
+/* ── STATS BAR ── */
+.stats-strip {
+  background: var(--ink2);
+  color: var(--paper);
+  display: flex;
+  gap: 0;
+  font-size: .78rem;
+  letter-spacing: .3px;
+}
+.stat-pill {
+  padding: 8px 20px;
+  border-right: 1px solid rgba(255,255,255,.1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stat-pill strong {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: var(--gold);
+}
+
+/* ── MAIN ── */
+main { padding: 0; overflow: hidden; }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: sticky;
+  top: 64px;
+  z-index: 50;
+}
+.search-wrap {
+  flex: 1;
+  position: relative;
+  max-width: 480px;
+}
+.search-wrap input {
+  width: 100%;
+  background: var(--paper2);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  padding: 9px 14px 9px 38px;
+  border-radius: var(--radius);
+  font-family: 'Source Serif 4', serif;
+  font-size: .9rem;
+  outline: none;
+  transition: border-color .2s;
+}
+.search-wrap input:focus { border-color: var(--ink3); }
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink3);
+  font-size: 14px;
+}
+.toolbar-right { display: flex; gap: 8px; margin-left: auto; align-items: center; }
+.view-btn {
+  background: none;
+  border: 1px solid var(--rule);
+  color: var(--ink3);
+  width: 34px; height: 34px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.view-btn:hover, .view-btn.active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+#resultCount { font-size: .82rem; color: var(--ink3); white-space: nowrap; }
+
+/* ── GRID VIEW ── */
+.content { padding: 28px 32px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+.card {
+  background: white;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+  box-shadow: var(--shadow);
+}
+.card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(26,24,20,.14); }
+.card-cover {
+  height: 140px;
+  background: var(--paper2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  border-bottom: 1px solid var(--rule);
+  position: relative;
+  overflow: hidden;
+}
+.card-cover img { width: 100%; height: 100%; object-fit: cover; }
+.card-cover-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink3);
+}
+.card-cover-placeholder span { font-size: .65rem; text-transform: uppercase; letter-spacing: .5px; }
+.card-type-badge {
+  position: absolute;
+  top: 8px; right: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: .6rem;
+  padding: 2px 7px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.card-body { padding: 12px 14px; }
+.card-titre {
+  font-family: 'Playfair Display', serif;
+  font-size: .9rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-auteur { font-size: .78rem; color: var(--ink3); font-style: italic; }
+.card-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+.tag {
+  font-size: .65rem;
+  background: var(--paper2);
+  color: var(--ink2);
+  padding: 2px 7px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  border: 1px solid var(--rule);
+}
+
+/* ── LIST VIEW ── */
+.list-view { display: none; }
+.list-view.active, .grid.active { display: grid; }
+.grid { display: grid; }
+.grid:not(.active) { display: none; }
+.list-view {
+  display: none;
+  flex-direction: column;
+  gap: 0;
+}
+.list-view.active { display: flex; }
+.list-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 180px 100px 90px 80px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+  transition: background .1s;
+  gap: 12px;
+}
+.list-row:hover { background: var(--paper2); padding-left: 8px; padding-right: 8px; border-radius: var(--radius); }
+.list-icon { font-size: 1.2rem; text-align: center; }
+.list-titre {
+  font-family: 'Playfair Display', serif;
+  font-size: .92rem;
+  font-weight: 600;
+}
+.list-auteur { font-size: .82rem; color: var(--ink3); font-style: italic; }
+.list-head {
+  display: grid;
+  grid-template-columns: 40px 1fr 180px 100px 90px 80px;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 2px solid var(--ink);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--ink3);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+/* ── EMPTY ── */
+.empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--ink3);
+  grid-column: 1/-1;
+}
+.empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: .4; }
+.empty h3 { font-family: 'Playfair Display', serif; color: var(--ink2); }
+
+/* ── BOUTONS ── */
+.btn {
+  font-family: 'Source Serif 4', serif;
+  padding: 9px 18px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-size: .88rem;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-secondary { background: var(--paper2); border: 1px solid var(--rule); color: var(--ink); }
+.btn-secondary:hover { background: var(--rule); }
+.btn-ghost { background: none; border: 1px solid var(--rule); color: var(--ink3); }
+.btn-ghost:hover { color: var(--ink); border-color: var(--ink3); }
+.btn-danger { background: #c0392b; color: white; }
+.btn-danger:hover { background: #a93226; }
+
+/* ── MODAL OVERLAY ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,24,20,.6);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+  padding: 20px;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+
+/* ── MODAL FICHE ── */
+.modal-fiche {
+  background: var(--paper);
+  border-radius: var(--radius);
+  width: 680px;
+  max-width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(16px);
+  transition: transform .25s;
+  box-shadow: 0 20px 60px rgba(26,24,20,.3);
+}
+.overlay.open .modal-fiche { transform: none; }
+.fiche-header {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 28px 32px 24px;
+  position: relative;
+}
+.fiche-type {
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.fiche-titre {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+.fiche-auteurs { font-style: italic; color: rgba(247,244,239,.7); font-size: .95rem; }
+.fiche-close {
+  position: absolute;
+  top: 16px; right: 20px;
+  background: none;
+  border: none;
+  color: rgba(247,244,239,.5);
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: color .15s;
+}
+.fiche-close:hover { color: var(--paper); }
+.fiche-body { padding: 28px 32px; }
+.fiche-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.fiche-field { }
+.fiche-label {
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--ink3);
+  margin-bottom: 3px;
+}
+.fiche-value { font-size: .92rem; color: var(--ink); }
+.fiche-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+.fiche-footer {
+  padding: 16px 32px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* ── MODAL FORMULAIRE ── */
+.modal-form {
+  background: var(--paper);
+  border-radius: var(--radius);
+  width: 560px;
+  max-width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(16px);
+  transition: transform .25s;
+  box-shadow: 0 20px 60px rgba(26,24,20,.3);
+}
+.overlay.open .modal-form { transform: none; }
+.form-header {
+  background: var(--ink2);
+  color: var(--paper);
+  padding: 22px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.form-header h2 { font-family: 'Playfair Display', serif; font-size: 1.1rem; }
+.form-body { padding: 24px 28px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.form-group.full { grid-column: 1/-1; }
+.form-group label {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  color: var(--ink3);
+  font-weight: 500;
+}
+.form-group input, .form-group select, .form-group textarea {
+  background: var(--paper2);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  font-family: 'Source Serif 4', serif;
+  font-size: .9rem;
+  outline: none;
+  transition: border-color .15s;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-color: var(--ink3); }
+.form-group textarea { resize: vertical; min-height: 70px; }
+.form-group select option { background: var(--paper2); }
+.form-footer {
+  padding: 16px 28px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.isbn-row { display: flex; gap: 8px; }
+.isbn-row input { flex: 1; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  font-size: .85rem;
+  z-index: 500;
+  transform: translateY(60px);
+  opacity: 0;
+  transition: all .3s;
+  border-left: 3px solid var(--gold);
+}
+.toast.show { transform: none; opacity: 1; }
+.toast.error { border-left-color: var(--accent); }
+
+/* ── LOADING ── */
+.loading {
+  display: none;
+  text-align: center;
+  padding: 60px;
+  grid-column: 1/-1;
+  color: var(--ink3);
+}
+.loading.show { display: block; }
+
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+  aside { display: none; }
+  header { padding: 0 16px; }
+  .toolbar, .content { padding-left: 16px; padding-right: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">📚 Ma <span>Bibliothèque</span></div>
+  <div class="header-right"></div>
+</header>
+
+<!-- STATS STRIP -->
+<div class="stats-strip" id="statsStrip">
+  <div class="stat-pill"><strong id="s-total">—</strong> ressources</div>
+  <div class="stat-pill"><strong id="s-auteurs">—</strong> auteurs</div>
+  <div class="stat-pill"><strong id="s-tags">—</strong> tags</div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Type</div>
+      <div class="filter-group" id="filterTypes">
+        <button class="filter-item active" data-filter="type" data-val="" onclick="setFilter('type','',this)">
+          Tous <span class="filter-count" id="fc-total">—</span>
+        </button>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Genres / Tags</div>
+      <div class="filter-group" id="filterTags"></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Statut</div>
+      <div class="filter-group" id="filterStatuts">
+        <button class="filter-item active" data-filter="statut" data-val="" onclick="setFilter('statut','',this)">Tous</button>
+        <button class="filter-item" data-filter="statut" data-val="possédé" onclick="setFilter('statut','possédé',this)">Possédé</button>
+        <button class="filter-item" data-filter="statut" data-val="souhaité" onclick="setFilter('statut','souhaité',this)">Souhaité</button>
+        <button class="filter-item" data-filter="statut" data-val="prêté" onclick="setFilter('statut','prêté',this)">Prêté</button>
+        <button class="filter-item" data-filter="statut" data-val="lu" onclick="setFilter('statut','lu',this)">Lu</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Titre, auteur, tag…" oninput="debounceSearch()">
+      </div>
+      <button class="btn btn-ghost" id="btnAvance" onclick="toggleAvance()" style="font-size:.82rem">⚙ Avancé</button>
+      <button class="btn btn-primary" onclick="ouvrirFormulaire()" style="font-size:.88rem;padding:8px 18px">＋ Ajouter</button>
+      <span id="resultCount"></span>
+      <div class="toolbar-right">
+        <select id="triSelect" onchange="filters.tri=this.value;rechercher()" style="background:var(--paper2);border:1px solid var(--rule);color:var(--ink3);padding:6px 10px;border-radius:var(--radius);font-family:inherit;font-size:.8rem;outline:none;cursor:pointer">
+          <option value="titre">A→Z Titre</option>
+          <option value="auteur">A→Z Auteur</option>
+          <option value="date">Date ↓</option>
+          <option value="date_ajout">Ajout ↓</option>
+        </select>
+        <button class="view-btn active" id="btnGrid" onclick="setView('grid')" title="Grille">▦</button>
+        <button class="view-btn" id="btnList" onclick="setView('list')" title="Liste">☰</button>
+      </div>
+    </div>
+
+    <!-- RECHERCHE AVANCÉE -->
+    <div id="panneauAvance" style="display:none;background:var(--paper2);border-bottom:1px solid var(--rule);padding:14px 32px">
+      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3)">Auteur</label>
+          <input id="filtreAuteur" type="text" placeholder="Nom…" oninput="debounceSearch()"
+            style="background:white;border:1px solid var(--rule);padding:7px 11px;border-radius:var(--radius);font-family:inherit;font-size:.88rem;width:160px;outline:none">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3)">Localisation</label>
+          <input id="filtreLocalisation" type="text" placeholder="Salon, Bureau…" oninput="debounceSearch()"
+            style="background:white;border:1px solid var(--rule);padding:7px 11px;border-radius:var(--radius);font-family:inherit;font-size:.88rem;width:160px;outline:none">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3)">Année de</label>
+          <input id="filtreAnneeMin" type="number" placeholder="1900" min="1800" max="2099" oninput="debounceSearch()"
+            style="background:white;border:1px solid var(--rule);padding:7px 11px;border-radius:var(--radius);font-family:inherit;font-size:.88rem;width:90px;outline:none">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3)">à</label>
+          <input id="filtreAnneeMax" type="number" placeholder="2025" min="1800" max="2099" oninput="debounceSearch()"
+            style="background:white;border:1px solid var(--rule);padding:7px 11px;border-radius:var(--radius);font-family:inherit;font-size:.88rem;width:90px;outline:none">
+        </div>
+        <button class="btn btn-ghost" onclick="reinitialiserFiltres()" style="font-size:.82rem;margin-bottom:1px">✕ Réinitialiser</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="loading show" id="loading">Chargement…</div>
+      <div class="grid active" id="gridView"></div>
+      <div class="list-view" id="listView">
+        <div class="list-head">
+          <div></div>
+          <div>Titre / Auteur</div>
+          <div>Éditeur</div>
+          <div>Année</div>
+          <div>Localisation</div>
+          <div>Statut</div>
+        </div>
+        <div id="listRows"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL FICHE -->
+<div class="overlay" id="overlayFiche" onclick="closeModal(event,'overlayFiche')">
+  <div class="modal-fiche">
+    <div class="fiche-header">
+      <div class="fiche-type" id="ficheType"></div>
+      <div class="fiche-titre" id="ficheTitre"></div>
+      <div class="fiche-auteurs" id="ficheAuteurs"></div>
+      <button class="fiche-close" onclick="fermerFiche()">✕</button>
+    </div>
+    <div class="fiche-body">
+      <div class="fiche-grid" id="ficheGrid"></div>
+      <div id="ficheTags" class="fiche-tags"></div>
+      <div id="ficheCommentaire" style="margin-top:16px;font-style:italic;color:var(--ink3)"></div>
+    </div>
+    <div class="fiche-footer">
+      <button class="btn btn-ghost" onclick="fermerFiche()">Fermer</button>
+      <button class="btn btn-secondary" id="btnModifier" onclick="modifierCourant()">✏️ Modifier</button>
+      <button class="btn btn-danger" id="btnSupprimer" onclick="supprimerCourant()">🗑 Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FORMULAIRE -->
+<div class="overlay" id="overlayForm" onclick="closeModal(event,'overlayForm')">
+  <div class="modal-form">
+    <div class="form-header">
+      <h2 id="formTitre">Nouvelle ressource</h2>
+      <button style="background:none;border:none;color:rgba(247,244,239,.6);font-size:1.3rem;cursor:pointer" onclick="fermerFormulaire()">✕</button>
+    </div>
+    <div class="form-body">
+      <input type="hidden" id="f-id">
+      <!-- ISBN scan -->
+      <div class="form-group full">
+        <label>Recherche par ISBN</label>
+        <div class="isbn-row">
+          <input id="f-isbn-scan" type="text" placeholder="Scanner ou saisir l'ISBN…">
+          <button class="btn btn-secondary" onclick="rechercherISBN()">🔍 Chercher</button>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--rule);margin:4px 0 16px;"></div>
+      <div class="form-row">
+        <div class="form-group full"><label>Titre *</label><input id="f-titre" placeholder="Titre de la ressource"></div>
+        <div class="form-group"><label>Type</label>
+          <select id="f-type">
+            <option value="livre_papier">📖 Livre papier</option>
+            <option value="ebook">📱 E-book</option>
+            <option value="audio">🎧 Audio</option>
+            <option value="pdf">📄 PDF / Document</option>
+            <option value="article">📰 Article</option>
+            <option value="bd">🎨 BD / Manga</option>
+            <option value="film">🎬 Film</option>
+            <option value="jeu_video">🎮 Jeu vidéo</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Statut</label>
+          <select id="f-statut">
+            <option value="possédé">Possédé</option>
+            <option value="souhaité">Souhaité</option>
+            <option value="prêté">Prêté</option>
+            <option value="lu">Lu</option>
+            <option value="abandonné">Abandonné</option>
+          </select>
+        </div>
+        <div class="form-group full"><label>Auteurs (séparés par virgule)</label><input id="f-auteurs" placeholder="Nom Prénom, Nom Prénom…"></div>
+        <div class="form-group"><label>ISBN</label><input id="f-isbn" placeholder="9782…"></div>
+        <div class="form-group"><label>Éditeur</label><input id="f-editeur"></div>
+        <div class="form-group"><label>Année de publication</label><input id="f-date" placeholder="2024"></div>
+        <div class="form-group"><label>Pages</label><input id="f-pages" placeholder="320"></div>
+        <div class="form-group"><label>Langue</label><input id="f-langue" placeholder="fr, en…"></div>
+        <div class="form-group"><label>Série / Collection</label><input id="f-serie"></div>
+        <div class="form-group full"><label>Localisation</label><input id="f-localisation" placeholder="Salon — étagère 3"></div>
+        <div class="form-group full"><label>Tags (séparés par virgule)</label><input id="f-tags" placeholder="Roman, SF, Histoire…"></div>
+        <div class="form-group full"><label>Fichier (chemin local)</label><input id="f-fichier" placeholder="/home/…/livre.epub"></div>
+        <div class="form-group full"><label>Commentaire</label><textarea id="f-commentaire"></textarea></div>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-ghost" onclick="fermerFormulaire()">Annuler</button>
+      <button class="btn btn-primary" onclick="sauvegarder()">✓ Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = "";  // Même origine Flask
+let currentView = "grid";
+let filters = { type: "", statut: "", tag: "", q: "", tri: "titre" };
+let currentRessource = null;
+let debounceTimer = null;
+
+// ── ICÔNES PAR TYPE ───────────────────────────────────────────────────────────
+const ICONS = {
+  livre_papier: "📖", ebook: "📱", audio: "🎧", pdf: "📄",
+  article: "📰", bd: "🎨", film: "🎬", jeu_video: "🎮"
+};
+const LABELS = {
+  livre_papier: "Livre", ebook: "E-book", audio: "Audio", pdf: "PDF",
+  article: "Article", bd: "BD", film: "Film", jeu_video: "Jeu"
+};
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function apiFetch(url, opts={}) {
+  const r = await fetch(url, opts);
+  return r.json();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  await Promise.all([chargerStats(), chargerFiltres()]);
+  await rechercher();
+}
+
+async function chargerStats() {
+  const res = await apiFetch("/api/stats");
+  if (!res.ok) return;
+  const s = res.data;
+  document.getElementById("s-total").textContent = s.total;
+  document.getElementById("s-auteurs").textContent = s.nb_auteurs;
+  document.getElementById("s-tags").textContent = s.nb_tags;
+  document.getElementById("fc-total").textContent = s.total;
+}
+
+async function chargerFiltres() {
+  // Types
+  const resTypes = await apiFetch("/api/types");
+  if (resTypes.ok) {
+    const cont = document.getElementById("filterTypes");
+    resTypes.data.forEach(t => {
+      const btn = document.createElement("button");
+      btn.className = "filter-item";
+      btn.dataset.filter = "type";
+      btn.dataset.val = t.libelle;
+      btn.onclick = function() { setFilter("type", t.libelle, this); };
+      btn.innerHTML = `${ICONS[t.libelle] || "•"} ${LABELS[t.libelle] || t.libelle} <span class="filter-count">${t.count}</span>`;
+      cont.appendChild(btn);
+    });
+  }
+  // Tags
+  const resTags = await apiFetch("/api/tags");
+  if (resTags.ok) {
+    const cont = document.getElementById("filterTags");
+    resTags.data.slice(0, 15).forEach(t => {
+      const btn = document.createElement("button");
+      btn.className = "filter-item";
+      btn.dataset.filter = "tag";
+      btn.dataset.val = t.libelle;
+      btn.onclick = function() { setFilter("tag", t.libelle, this); };
+      btn.innerHTML = `${t.libelle} <span class="filter-count">${t.count}</span>`;
+      cont.appendChild(btn);
+    });
+  }
+}
+
+// ── FILTRES ───────────────────────────────────────────────────────────────────
+function setFilter(type, val, btn) {
+  // Désactiver les autres boutons du même groupe
+  const group = btn.closest(".filter-group");
+  if (group) group.querySelectorAll(".filter-item").forEach(b => b.classList.remove("active"));
+
+  // Toggle
+  if (filters[type] === val && val !== "") {
+    filters[type] = "";
+  } else {
+    filters[type] = val;
+    btn.classList.add("active");
+  }
+  rechercher();
+}
+
+function debounceSearch() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    filters.q = document.getElementById("searchInput").value;
+    rechercher();
+  }, 300);
+}
+
+// ── RECHERCHE ─────────────────────────────────────────────────────────────────
+async function rechercher() {
+  document.getElementById("loading").classList.add("show");
+  document.getElementById("gridView").innerHTML = "";
+  document.getElementById("listRows").innerHTML = "";
+
+  const params = new URLSearchParams();
+  if (filters.q)      params.set("q",      filters.q);
+  if (filters.type)   params.set("type",   filters.type);
+  if (filters.statut) params.set("statut", filters.statut);
+  if (filters.tag)    params.set("tag",    filters.tag);
+  if (filters.tri)    params.set("tri",    filters.tri);
+  const auteur = document.getElementById("filtreAuteur")?.value.trim();
+  const loc    = document.getElementById("filtreLocalisation")?.value.trim();
+  const amin   = document.getElementById("filtreAnneeMin")?.value.trim();
+  const amax   = document.getElementById("filtreAnneeMax")?.value.trim();
+  if (auteur) params.set("auteur",    auteur);
+  if (loc)    params.set("localisation", loc);
+  if (amin)   params.set("annee_min", amin);
+  if (amax)   params.set("annee_max", amax);
+
+  const res = await apiFetch(`/api/rechercher?${params}`);
+  document.getElementById("loading").classList.remove("show");
+
+  if (!res.ok) { showToast("Erreur de recherche", true); return; }
+
+  const data = res.data;
+  document.getElementById("resultCount").textContent =
+    data.length === 0 ? "Aucun résultat" : `${data.length} résultat${data.length > 1 ? "s" : ""}`;
+
+  if (data.length === 0) {
+    const empty = `<div class="empty"><div class="empty-icon">📭</div><h3>Aucune ressource trouvée</h3></div>`;
+    document.getElementById("gridView").innerHTML = empty;
+    return;
+  }
+
+  // Grille
+  document.getElementById("gridView").innerHTML = data.map(r => `
+    <div class="card" onclick="ouvrirFiche('${r.id}')">
+      <div class="card-cover">
+        ${r.couverture
+          ? `<img src="${r.couverture}" alt="" onerror="this.style.display='none'">`
+          : `<div class="card-cover-placeholder">${ICONS[r.type] || "📦"}<span>${LABELS[r.type] || r.type}</span></div>`
+        }
+        <span class="card-type-badge">${LABELS[r.type] || r.type}</span>
+      </div>
+      <div class="card-body">
+        <div class="card-titre">${esc(r.titre)}</div>
+        <div class="card-auteur">${(r.auteurs || []).slice(0,2).join(", ") || "—"}</div>
+        <div class="card-tags">${(r.tags || []).slice(0,3).map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+      </div>
+    </div>
+  `).join("");
+
+  // Liste
+  document.getElementById("listRows").innerHTML = data.map(r => `
+    <div class="list-row" onclick="ouvrirFiche('${r.id}')">
+      <div class="list-icon">${ICONS[r.type] || "📦"}</div>
+      <div>
+        <div class="list-titre">${esc(r.titre)}</div>
+        <div class="list-auteur">${(r.auteurs || []).slice(0,2).join(", ") || "—"}</div>
+      </div>
+      <div style="font-size:.82rem;color:var(--ink3)">${esc(r.editeur || "—")}</div>
+      <div style="font-size:.82rem;color:var(--ink3)">${(r.date_publication || "—").slice(0,4)}</div>
+      <div style="font-size:.82rem;color:var(--ink3)">${esc(r.localisation || "—")}</div>
+      <div><span class="tag">${esc(r.statut || "—")}</span></div>
+    </div>
+  `).join("");
+}
+
+// ── FICHE ─────────────────────────────────────────────────────────────────────
+async function ouvrirFiche(id) {
+  const res = await apiFetch(`/api/ressource/${id}`);
+  if (!res.ok) return;
+  const r = res.data;
+  currentRessource = r;
+
+  document.getElementById("ficheType").textContent = `${ICONS[r.type] || "📦"} ${LABELS[r.type] || r.type}`;
+  document.getElementById("ficheTitre").textContent = r.titre;
+  document.getElementById("ficheAuteurs").textContent = (r.auteurs || []).join(", ") || "Auteur inconnu";
+
+  const champs = [
+    ["ISBN",          r.isbn],
+    ["Éditeur",       r.editeur],
+    ["Publication",   r.date_publication ? r.date_publication.slice(0,4) : null],
+    ["Pages",         r.pages],
+    ["Langue",        r.langue],
+    ["Série",         r.serie],
+    ["Localisation",  r.localisation],
+    ["Statut",        r.statut],
+    ["Narrateur",     r.narrateur],
+    ["Durée",         r.duree],
+    ["Fichier",       r.fichier],
+    ["Ajouté le",     r.date_ajout],
+  ].filter(([, v]) => v);
+
+  document.getElementById("ficheGrid").innerHTML = champs.map(([l, v]) => `
+    <div class="fiche-field">
+      <div class="fiche-label">${l}</div>
+      <div class="fiche-value">${esc(v)}</div>
+    </div>
+  `).join("");
+
+  document.getElementById("ficheTags").innerHTML = (r.tags || []).map(t =>
+    `<span class="tag" style="cursor:pointer" onclick="filtrerTag('${t}')">${esc(t)}</span>`
+  ).join("");
+
+  document.getElementById("ficheCommentaire").textContent = r.commentaire || "";
+
+  document.getElementById("overlayFiche").classList.add("open");
+}
+
+function fermerFiche() {
+  document.getElementById("overlayFiche").classList.remove("open");
+  currentRessource = null;
+}
+
+function filtrerTag(tag) {
+  fermerFiche();
+  filters.tag = tag;
+  // Activer le bon bouton dans la sidebar
+  document.querySelectorAll("[data-filter='tag']").forEach(b => {
+    b.classList.toggle("active", b.dataset.val === tag);
+  });
+  rechercher();
+}
+
+// ── FORMULAIRE ────────────────────────────────────────────────────────────────
+function ouvrirFormulaire(r = null) {
+  document.getElementById("formTitre").textContent = r ? "✏️ Modifier" : "➕ Nouvelle ressource";
+  document.getElementById("f-id").value          = r?.id || "";
+  document.getElementById("f-titre").value       = r?.titre || "";
+  document.getElementById("f-type").value        = r?.type || "livre_papier";
+  document.getElementById("f-statut").value      = r?.statut || "possédé";
+  document.getElementById("f-auteurs").value     = (r?.auteurs || []).join(", ");
+  document.getElementById("f-isbn").value        = r?.isbn || "";
+  document.getElementById("f-editeur").value     = r?.editeur || "";
+  document.getElementById("f-date").value        = r?.date_publication || "";
+  document.getElementById("f-pages").value       = r?.pages || "";
+  document.getElementById("f-langue").value      = r?.langue || "";
+  document.getElementById("f-serie").value       = r?.serie || "";
+  document.getElementById("f-localisation").value= r?.localisation || "";
+  document.getElementById("f-tags").value        = (r?.tags || []).join(", ");
+  document.getElementById("f-fichier").value     = r?.fichier || "";
+  document.getElementById("f-commentaire").value = r?.commentaire || "";
+  document.getElementById("f-isbn-scan").value   = "";
+  document.getElementById("overlayForm").classList.add("open");
+}
+
+function fermerFormulaire() {
+  document.getElementById("overlayForm").classList.remove("open");
+}
+
+function modifierCourant() {
+  const r = currentRessource;  // sauvegarde AVANT fermerFiche()
+  fermerFiche();
+  if (r) ouvrirFormulaire(r);
+}
+
+async function sauvegarder() {
+  const id = document.getElementById("f-id").value;
+  const payload = {
+    titre:            document.getElementById("f-titre").value.trim(),
+    type_res:         document.getElementById("f-type").value,
+    statut:           document.getElementById("f-statut").value,
+    auteurs:          document.getElementById("f-auteurs").value.split(",").map(s=>s.trim()).filter(Boolean),
+    isbn:             document.getElementById("f-isbn").value.trim() || null,
+    editeur:          document.getElementById("f-editeur").value.trim() || null,
+    date_publication: document.getElementById("f-date").value.trim() || null,
+    pages:            document.getElementById("f-pages").value.trim() || null,
+    langue:           document.getElementById("f-langue").value.trim() || null,
+    serie:            document.getElementById("f-serie").value.trim() || null,
+    localisation:     document.getElementById("f-localisation").value.trim() || null,
+    tags:             document.getElementById("f-tags").value.split(",").map(s=>s.trim()).filter(Boolean),
+    fichier:          document.getElementById("f-fichier").value.trim() || null,
+    commentaire:      document.getElementById("f-commentaire").value.trim() || null,
+  };
+  if (!payload.titre) { showToast("Le titre est obligatoire", true); return; }
+
+  let res;
+  if (id) {
+    res = await apiFetch(`/api/ressource/${id}`, {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+  } else {
+    res = await apiFetch("/api/ressource", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+  }
+
+  if (res.ok) {
+    showToast(id ? "✅ Ressource modifiée" : "✅ Ressource ajoutée");
+    fermerFormulaire();
+    await chargerStats();
+    await rechercher();
+  } else {
+    showToast(res.error || "Erreur", true);
+  }
+}
+
+async function supprimerCourant() {
+  if (!currentRessource) return;
+  if (!confirm(`Supprimer "${currentRessource.titre}" ?`)) return;
+  const res = await apiFetch(`/api/ressource/${currentRessource.id}`, { method: "DELETE" });
+  if (res.ok) {
+    showToast("🗑 Supprimé");
+    fermerFiche();
+    await chargerStats();
+    await rechercher();
+  } else {
+    showToast(res.error || "Erreur", true);
+  }
+}
+
+// ── ISBN ──────────────────────────────────────────────────────────────────────
+async function rechercherISBN() {
+  const isbn = document.getElementById("f-isbn-scan").value.trim();
+  if (!isbn) return;
+  showToast("🔍 Recherche ISBN…");
+  const res = await apiFetch(`/api/isbn/${isbn}`);
+  if (res.ok) {
+    const m = res.data;
+    if (m.titre)            document.getElementById("f-titre").value     = m.titre;
+    if (m.auteurs?.length)  document.getElementById("f-auteurs").value   = m.auteurs.join(", ");
+    if (m.isbn)             document.getElementById("f-isbn").value      = m.isbn;
+    if (m.editeur)          document.getElementById("f-editeur").value   = m.editeur;
+    if (m.date_publication) document.getElementById("f-date").value      = m.date_publication;
+    if (m.pages)            document.getElementById("f-pages").value     = m.pages;
+    if (m.langue)           document.getElementById("f-langue").value    = m.langue;
+    if (m.tags?.length)     document.getElementById("f-tags").value      = m.tags.join(", ");
+    showToast("✅ Métadonnées chargées depuis l'ISBN !");
+  } else {
+    showToast("ISBN non trouvé", true);
+  }
+}
+
+// ── VUE ───────────────────────────────────────────────────────────────────────
+function toggleAvance() {
+  const p = document.getElementById("panneauAvance");
+  const btn = document.getElementById("btnAvance");
+  const open = p.style.display === "none";
+  p.style.display = open ? "block" : "none";
+  btn.style.background = open ? "var(--ink)" : "";
+  btn.style.color = open ? "var(--paper)" : "";
+  btn.style.borderColor = open ? "var(--ink)" : "";
+}
+
+function reinitialiserFiltres() {
+  document.getElementById("searchInput").value = "";
+  document.getElementById("filtreAuteur").value = "";
+  document.getElementById("filtreLocalisation").value = "";
+  document.getElementById("filtreAnneeMin").value = "";
+  document.getElementById("filtreAnneeMax").value = "";
+  document.getElementById("triSelect").value = "titre";
+  filters = { type: "", statut: "", tag: "", q: "", tri: "titre" };
+  // Réinitialiser les boutons sidebar
+  document.querySelectorAll(".filter-item").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".filter-item[data-val='']").forEach(b => b.classList.add("active"));
+  rechercher();
+}
+
+function setView(v) {
+  currentView = v;
+  document.getElementById("gridView").classList.toggle("active", v === "grid");
+  document.getElementById("listView").classList.toggle("active", v === "list");
+  document.getElementById("btnGrid").classList.toggle("active", v === "grid");
+  document.getElementById("btnList").classList.toggle("active", v === "list");
+}
+
+// ── UTILITAIRES ───────────────────────────────────────────────────────────────
+function closeModal(e, id) {
+  if (e.target === document.getElementById(id))
+    document.getElementById(id).classList.remove("open");
+}
+
+function esc(s) {
+  if (!s) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+let toastTimer;
+function showToast(msg, error = false) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (error ? " error" : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+// ── GO ────────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
