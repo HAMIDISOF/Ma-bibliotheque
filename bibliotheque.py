@@ -261,7 +261,8 @@ class Bibliotheque:
                 JOIN statuts s ON s.id = r.statut_id
                 WHERE ressources_fts MATCH ?
             """
-            params = [query]
+            # Ajout du wildcard * pour recherche partielle (ex: "Cah" trouve "Cahier")
+            params = [query.strip() + "*"]
         else:
             sql = """
                 SELECT r.*, t.libelle as type, s.libelle as statut

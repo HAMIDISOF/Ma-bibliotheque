@@ -613,7 +613,7 @@ main { padding: 0; overflow: hidden; }
     <div class="toolbar">
       <div class="search-wrap">
         <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Titre, auteur, tag…" oninput="debounceSearch()">
+        <input type="text" id="searchInput" placeholder="Titre, auteur, tag…" oninput="debounceSearch()" onchange="debounceSearch()" onkeyup="debounceSearch()">
       </div>
       <button class="btn btn-ghost" id="btnAvance" onclick="toggleAvance()" style="font-size:.82rem">⚙ Filtres</button>
       <button class="btn btn-primary" onclick="ouvrirFormulaire()" style="font-size:.88rem;padding:8px 18px">＋ Ajouter</button>
@@ -858,8 +858,17 @@ function debounceSearch() {
   debounceTimer = setTimeout(() => {
     filters.q = document.getElementById("searchInput").value;
     rechercher();
-  }, 300);
+  }, 200);
 }
+
+// Déclenché quand le clavier mobile valide un mot (autocorrection, composition)
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("searchInput");
+  if (input) {
+    input.addEventListener("compositionend", debounceSearch);
+    input.addEventListener("input", debounceSearch);
+  }
+});
 
 // ── RECHERCHE ─────────────────────────────────────────────────────────────────
 async function rechercher() {
