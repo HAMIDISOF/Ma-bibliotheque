@@ -533,6 +533,7 @@ main { padding: 0; overflow: hidden; }
   .content { padding: 12px; }
   .search-wrap { max-width: 100%; width: 100%; order: -1; flex: 1 1 100%; }
   .toolbar-right { display: none; } /* tri et grille/liste cachés sur mobile */
+  #filtresMobile { display: block !important; } /* statut+type visibles sur mobile */
   #btnAvance { font-size:.8rem; padding: 7px 12px; }
   .btn-primary { font-size:.8rem; padding: 7px 14px; }
   #resultCount { font-size:.75rem; }
@@ -632,16 +633,33 @@ main { padding: 0; overflow: hidden; }
 
     <!-- RECHERCHE AVANCÉE -->
     <div id="panneauAvance" style="display:none;background:var(--paper2);border-bottom:1px solid var(--rule);padding:14px 32px">
+      <!-- Statut et Type visibles uniquement sur mobile (sidebar cachée) -->
+      <div id="filtresMobile" style="display:none;margin-bottom:12px">
+        <div style="margin-bottom:8px">
+          <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3);display:block;margin-bottom:4px">Statut</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="filter-item active" data-filter="statut" data-val="" onclick="setFilter('statut','',this)">Tous</button>
+            <button class="filter-item" data-filter="statut" data-val="possédé" onclick="setFilter('statut','possédé',this)">Possédé</button>
+            <button class="filter-item" data-filter="statut" data-val="souhaité" onclick="setFilter('statut','souhaité',this)">Souhaité</button>
+            <button class="filter-item" data-filter="statut" data-val="prêté" onclick="setFilter('statut','prêté',this)">Prêté</button>
+            <button class="filter-item" data-filter="statut" data-val="lu" onclick="setFilter('statut','lu',this)">Lu</button>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3);display:block;margin-bottom:4px">Type</label>
+          <div class="filter-group" id="filterTypesMobile"></div>
+        </div>
+      </div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end">
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3)">Auteur</label>
-          <input id="filtreAuteur" type="text" placeholder="Nom…" oninput="debounceSearch()"
-            style="background:white;border:1px solid var(--rule);padding:7px 11px;border-radius:var(--radius);font-family:inherit;font-size:.88rem;width:160px;outline:none">
+          <input id="filtreAuteur" type="text" placeholder="Nom…" oninput="debounceSearch()" onchange="debounceSearch()"
+            style="background:white;border:1px solid var(--rule);padding:7px 11px;border-radius:var(--radius);font-family:inherit;font-size:16px;width:100%;outline:none;touch-action:manipulation">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3)">Localisation</label>
-          <input id="filtreLocalisation" type="text" placeholder="Salon, Bureau…" oninput="debounceSearch()"
-            style="background:white;border:1px solid var(--rule);padding:7px 11px;border-radius:var(--radius);font-family:inherit;font-size:.88rem;width:160px;outline:none">
+          <input id="filtreLocalisation" type="text" placeholder="Salon, Bureau…" oninput="debounceSearch()" onchange="debounceSearch()"
+            style="background:white;border:1px solid var(--rule);padding:7px 11px;border-radius:var(--radius);font-family:inherit;font-size:16px;width:100%;outline:none;touch-action:manipulation">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3)">Année de</label>
@@ -807,6 +825,28 @@ async function chargerStats() {
 }
 
 async function chargerFiltres() {
+  // Synchronise les types dans le panneau mobile
+  function syncTypesMobile(types) {
+    const mob = document.getElementById("filterTypesMobile");
+    if (!mob) return;
+    mob.innerHTML = "";
+    const allBtn = document.createElement("button");
+    allBtn.className = "filter-item active";
+    allBtn.dataset.filter = "type";
+    allBtn.dataset.val = "";
+    allBtn.onclick = function(){ setFilter("type", "", this); };
+    allBtn.textContent = "Tous";
+    mob.appendChild(allBtn);
+    types.forEach(t => {
+      const b = document.createElement('button');
+      b.className = 'filter-item';
+      b.dataset.filter = 'type';
+      b.dataset.val = t.libelle;
+      b.onclick = function(){ setFilter('type', t.libelle, this); };
+      b.textContent = t.libelle;
+      mob.appendChild(b);
+    });
+  }
   // Types
   const resTypes = await apiFetch("/api/types");
   if (resTypes.ok) {
@@ -820,6 +860,7 @@ async function chargerFiltres() {
       btn.innerHTML = `${ICONS[t.libelle] || "•"} ${LABELS[t.libelle] || t.libelle} <span class="filter-count">${t.count}</span>`;
       cont.appendChild(btn);
     });
+    syncTypesMobile(resTypes.data); // sync panneau mobile
   }
   // Tags
   const resTags = await apiFetch("/api/tags");
