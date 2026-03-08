@@ -16,6 +16,11 @@ Dépendances :
 import threading
 import socket
 import sys
+try:
+    import qrcode
+    HAS_QR = True
+except ImportError:
+    HAS_QR = False
 from pathlib import Path
 from flask import Flask, jsonify, send_from_directory, request
 
@@ -192,11 +197,11 @@ def api_isbn(isbn):
 
 # ── LANCEMENT ─────────────────────────────────────────────────────────────────
 
+PORT = 5678  # Port fixe — changer ici si conflit avec une autre appli
+
 def _trouver_port():
-    """Trouve un port libre."""
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
+    """Utilise le port fixe défini ci-dessus."""
+    return PORT
 
 
 def _lancer_flask(port):
@@ -223,6 +228,14 @@ def main():
     print(f"📚 Ma Bibliothèque démarrée !")
     print(f"   PC        → http://127.0.0.1:{port}")
     print(f"   Téléphone → http://{ip}:{port}")
+    if HAS_QR and ip != "?":
+        print("\n   📱 Scanne ce QR Code avec ton téléphone :")
+        qr = qrcode.QRCode(border=1)
+        qr.add_data(f"http://{ip}:{port}")
+        qr.make(fit=True)
+        qr.print_ascii(invert=True)
+    elif not HAS_QR:
+        print("   💡 Installe qrcode pour afficher un QR Code : pip install qrcode")
 
     try:
         import webview
