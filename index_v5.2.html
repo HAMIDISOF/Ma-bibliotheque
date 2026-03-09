@@ -529,7 +529,38 @@ main { padding: 0; overflow: hidden; }
   .layout { grid-template-columns: 1fr; }
   aside { display: none; }
   header { padding: 0 16px; }
-  .toolbar, .content { padding-left: 16px; padding-right: 16px; }
+  .toolbar { padding: 10px 12px; flex-wrap: wrap; gap: 8px; top: 56px; }
+  .content { padding: 12px; }
+  .search-wrap { max-width: 100%; width: 100%; order: -1; flex: 1 1 100%; }
+  .toolbar-right { display: none; } /* tri et grille/liste cachés sur mobile */
+  #btnAvance { font-size:.8rem; padding: 7px 12px; }
+  .btn-primary { font-size:.8rem; padding: 7px 14px; }
+  #resultCount { font-size:.75rem; }
+  .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card-cover { height: 80px; }
+  .card-body { padding: 8px 10px; }
+  .card-titre { font-size: .82rem; }
+  .card-auteur { font-size: .72rem; }
+  .card-tags { display: none; }
+  .list-row { grid-template-columns: 32px 1fr 70px; gap: 8px; }
+  .list-row > div:nth-child(3),
+  .list-row > div:nth-child(4),
+  .list-row > div:nth-child(5) { display: none; }
+  .list-head { grid-template-columns: 32px 1fr 70px; }
+  .list-head > div:nth-child(3),
+  .list-head > div:nth-child(4),
+  .list-head > div:nth-child(5) { display: none; }
+  .modal-fiche, .modal-form { max-height: 95vh; }
+  .fiche-header { padding: 20px; }
+  .fiche-body { padding: 16px 20px; }
+  .fiche-grid { grid-template-columns: 1fr; }
+  .fiche-footer { flex-wrap: wrap; padding: 12px 20px; }
+  #panneauAvance { padding: 12px; }
+  #panneauAvance > div { flex-direction: column; }
+  #panneauAvance input { width: 100% !important; }
+  header { height: 56px; }
+  .stats-strip { font-size: .72rem; }
+  .stat-pill { padding: 6px 12px; }
 }
 </style>
 </head>
@@ -582,9 +613,9 @@ main { padding: 0; overflow: hidden; }
     <div class="toolbar">
       <div class="search-wrap">
         <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Titre, auteur, tag…" oninput="debounceSearch()">
+        <input type="text" id="searchInput" placeholder="Titre, auteur, tag…" oninput="debounceSearch()" onchange="debounceSearch()" onkeyup="debounceSearch()">
       </div>
-      <button class="btn btn-ghost" id="btnAvance" onclick="toggleAvance()" style="font-size:.82rem">⚙ Avancé</button>
+      <button class="btn btn-ghost" id="btnAvance" onclick="toggleAvance()" style="font-size:.82rem">⚙ Filtres</button>
       <button class="btn btn-primary" onclick="ouvrirFormulaire()" style="font-size:.88rem;padding:8px 18px">＋ Ajouter</button>
       <span id="resultCount"></span>
       <div class="toolbar-right">
@@ -732,7 +763,8 @@ main { padding: 0; overflow: hidden; }
 
 <script>
 const API = "";  // Même origine Flask
-let currentView = "grid";
+const isMobile = window.innerWidth <= 768;
+let currentView = isMobile ? "list" : "grid";
 let filters = { type: "", statut: "", tag: "", q: "", tri: "titre" };
 let currentRessource = null;
 let debounceTimer = null;
@@ -749,8 +781,13 @@ const LABELS = {
 
 // ── API ───────────────────────────────────────────────────────────────────────
 async function apiFetch(url, opts={}) {
-  const r = await fetch(url, opts);
-  return r.json();
+  try {
+    const r = await fetch(url, opts);
+    return await r.json();
+  } catch(e) {
+    console.error("apiFetch error:", e);
+    return { ok: false, error: "Erreur réseau" };
+  }
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
@@ -821,8 +858,17 @@ function debounceSearch() {
   debounceTimer = setTimeout(() => {
     filters.q = document.getElementById("searchInput").value;
     rechercher();
-  }, 300);
+  }, 200);
 }
+
+// Déclenché quand le clavier mobile valide un mot (autocorrection, composition)
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("searchInput");
+  if (input) {
+    input.addEventListener("compositionend", debounceSearch);
+    input.addEventListener("input", debounceSearch);
+  }
+});
 
 // ── RECHERCHE ─────────────────────────────────────────────────────────────────
 async function rechercher() {
@@ -1118,6 +1164,7 @@ function showToast(msg, error = false) {
 }
 
 // ── GO ────────────────────────────────────────────────────────────────────────
+if (isMobile) setView("list");
 init();
 </script>
 </body>

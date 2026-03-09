@@ -201,7 +201,7 @@ def _trouver_port():
 
 def _lancer_flask(port):
     """Lance Flask dans un thread daemon."""
-    app.run(host="127.0.0.1", port=port, debug=False, use_reloader=False)
+    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
 
 
 def main():
@@ -210,6 +210,19 @@ def main():
     # Flask dans un thread daemon (s'arrête quand la fenêtre se ferme)
     t = threading.Thread(target=_lancer_flask, args=(port,), daemon=True)
     t.start()
+
+    # Affiche l IP locale pour accès téléphone
+    import socket as _sock
+    try:
+        s = _sock.socket(_sock.AF_INET, _sock.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+    except Exception:
+        ip = "?"
+    print(f"📚 Ma Bibliothèque démarrée !")
+    print(f"   PC        → http://127.0.0.1:{port}")
+    print(f"   Téléphone → http://{ip}:{port}")
 
     try:
         import webview
