@@ -564,6 +564,7 @@ main { padding: 0; overflow: hidden; }
   .stat-pill { padding: 6px 12px; }
 }
 </style>
+<script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
 
@@ -605,6 +606,12 @@ main { padding: 0; overflow: hidden; }
         <button class="filter-item" data-filter="statut" data-val="souhaité" onclick="setFilter('statut','souhaité',this)">Souhaité</button>
         <button class="filter-item" data-filter="statut" data-val="prêté" onclick="setFilter('statut','prêté',this)">Prêté</button>
         <button class="filter-item" data-filter="statut" data-val="lu" onclick="setFilter('statut','lu',this)">Lu</button>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Propriétaire</div>
+      <div class="filter-group" id="filterProprietaires">
+        <button class="filter-item active" data-filter="proprietaire" data-val="" onclick="setFilter('proprietaire','',this)">Tous</button>
       </div>
     </div>
   </aside>
@@ -730,6 +737,11 @@ main { padding: 0; overflow: hidden; }
         <div class="isbn-row">
           <input id="f-isbn-scan" type="text" placeholder="Scanner ou saisir l'ISBN…">
           <button class="btn btn-secondary" onclick="rechercherISBN()">🔍 Chercher</button>
+          <button class="btn btn-secondary" onclick="toggleScanner()" id="btn-scan" title="Scanner avec la caméra">📷</button>
+        </div>
+        <div id="scanner-container" style="display:none;margin-top:10px">
+          <div id="qr-reader" style="width:100%;border-radius:8px;overflow:hidden"></div>
+          <button class="btn btn-secondary" style="margin-top:6px;width:100%" onclick="arreterScanner()">✖ Fermer le scanner</button>
         </div>
       </div>
       <div style="border-top:1px solid var(--rule);margin:4px 0 16px;"></div>
@@ -755,6 +767,9 @@ main { padding: 0; overflow: hidden; }
             <option value="lu">Lu</option>
             <option value="abandonné">Abandonné</option>
           </select>
+        </div>
+        <div class="form-group"><label>Propriétaire</label>
+          <select id="f-proprietaire"><option value="">— Choisir —</option></select>
         </div>
         <div class="form-group full"><label>Auteurs (séparés par virgule)</label><input id="f-auteurs" placeholder="Nom Prénom, Nom Prénom…"></div>
         <div class="form-group"><label>ISBN</label><input id="f-isbn" placeholder="9782…"></div>
@@ -783,7 +798,8 @@ main { padding: 0; overflow: hidden; }
 const API = "";  // Même origine Flask
 const isMobile = window.innerWidth <= 768;
 let currentView = isMobile ? "list" : "grid";
-let filters = { type: "", statut: "", tag: "", q: "", tri: "titre" };
+let filters = { type: "", statut: "", tag: "", q: "", tri: "titre", proprietaire: "" };
+let qrScanner = null;
 let currentRessource = null;
 let debounceTimer = null;
 
@@ -809,6 +825,117 @@ async function apiFetch(url, opts={}) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+// ── PROPRIÉTAIRES ──────────────────────────────────────────────────────────
+let proprietairesListe = [];
+
+async function chargerProprietaires() {
+  const res = await apiFetch("/api/proprietaires");
+  if (!res?.ok) return;
+  proprietairesListe = res.data;
+  // Populer le select du formulaire
+  const sel = document.getElementById("f-proprietaire");
+  sel.innerHTML = '<option value="">— Choisir —</option>';
+  proprietairesListe.forEach(p => {
+    const o = document.createElement("option");
+    o.value = p.nom; o.textContent = p.nom;
+    sel.appendChild(o);
+  });
+  // Populer la sidebar
+  const sidebar = document.getElementById("filterProprietaires");
+  sidebar.innerHTML = '<button class="filter-item active" data-filter="proprietaire" data-val="" onclick="setFilter('proprietaire','',this)">Tous</button>';
+  proprietairesListe.forEach(p => {
+    const btn = document.createElement("button");
+    btn.className = "filter-item";
+    btn.dataset.filter = "proprietaire";
+    btn.dataset.val = p.nom;
+    btn.onclick = () => setFilter("proprietaire", p.nom, btn);
+    btn.textContent = p.nom;
+    sidebar.appendChild(btn);
+  });
+  // Bouton gérer (roue dentée)
+  const manage = document.createElement("button");
+  manage.className = "filter-item";
+  manage.style.cssText = "margin-top:8px;font-size:.75rem;opacity:.7";
+  manage.textContent = "⚙ Gérer la liste";
+  manage.onclick = ouvrirGestionProprietaires;
+  sidebar.appendChild(manage);
+}
+
+async function ajouterProprietaire() {
+  const nom = document.getElementById("new-prop-input").value.trim();
+  if (!nom) return;
+  await apiFetch("/api/proprietaires", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({nom}) });
+  document.getElementById("new-prop-input").value = "";
+  await chargerProprietaires();
+  renderGestionProprietaires();
+}
+
+async function supprimerProprietaire(pid) {
+  if (!confirm("Supprimer ce membre ? Les livres associés seront désassociés.")) return;
+  await apiFetch(`/api/proprietaires/${pid}`, { method: "DELETE" });
+  await chargerProprietaires();
+  renderGestionProprietaires();
+}
+
+function renderGestionProprietaires() {
+  const list = document.getElementById("prop-manage-list");
+  if (!list) return;
+  list.innerHTML = "";
+  proprietairesListe.forEach(p => {
+    const li = document.createElement("div");
+    li.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--rule)";
+    li.innerHTML = `<span>${p.nom}</span><button onclick="supprimerProprietaire(${p.id})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem" title="Supprimer">🗑</button>`;
+    list.appendChild(li);
+  });
+}
+
+function ouvrirGestionProprietaires() {
+  let modal = document.getElementById("modal-proprietaires");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "modal-proprietaires";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center";
+    modal.innerHTML = `
+      <div style="background:var(--paper2);border-radius:12px;padding:24px;width:320px;max-width:90vw">
+        <h3 style="margin-bottom:16px;font-size:1rem">⚙ Gérer les membres</h3>
+        <div id="prop-manage-list" style="margin-bottom:16px"></div>
+        <div style="display:flex;gap:8px">
+          <input id="new-prop-input" placeholder="Nouveau membre…" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--rule);background:var(--paper);color:var(--ink1);font-family:inherit">
+          <button onclick="ajouterProprietaire()" class="btn btn-primary" style="padding:8px 12px">+ Ajouter</button>
+        </div>
+        <button onclick="document.getElementById('modal-proprietaires').remove()" class="btn btn-secondary" style="width:100%;margin-top:12px">Fermer</button>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+  renderGestionProprietaires();
+}
+
+// ── SCANNER ISBN ────────────────────────────────────────────────────────────
+function toggleScanner() {
+  const cont = document.getElementById("scanner-container");
+  if (cont.style.display === "none") {
+    cont.style.display = "block";
+    qrScanner = new Html5Qrcode("qr-reader");
+    qrScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 100 } },
+      (code) => {
+        document.getElementById("f-isbn-scan").value = code;
+        arreterScanner();
+        rechercherISBN();
+      },
+      () => {}
+    ).catch(() => { showToast("❌ Caméra non accessible"); arreterScanner(); });
+  } else {
+    arreterScanner();
+  }
+}
+
+function arreterScanner() {
+  if (qrScanner) { qrScanner.stop().catch(()=>{}); qrScanner = null; }
+  document.getElementById("scanner-container").style.display = "none";
+}
+
 async function init() {
   await Promise.all([chargerStats(), chargerFiltres()]);
   await rechercher();
@@ -922,7 +1049,8 @@ async function rechercher() {
   if (filters.type)   params.set("type",   filters.type);
   if (filters.statut) params.set("statut", filters.statut);
   if (filters.tag)    params.set("tag",    filters.tag);
-  if (filters.tri)    params.set("tri",    filters.tri);
+  if (filters.tri)          params.set("tri",    filters.tri);
+  if (filters.proprietaire) params.set("proprietaire", filters.proprietaire);
   const auteur = document.getElementById("filtreAuteur")?.value.trim();
   const loc    = document.getElementById("filtreLocalisation")?.value.trim();
   const amin   = document.getElementById("filtreAnneeMin")?.value.trim();
@@ -1057,6 +1185,7 @@ function ouvrirFormulaire(r = null) {
   document.getElementById("f-fichier").value     = r?.fichier || "";
   document.getElementById("f-commentaire").value = r?.commentaire || "";
   document.getElementById("f-isbn-scan").value   = "";
+  document.getElementById("f-proprietaire").value = r?.proprietaire || "";
   document.getElementById("overlayForm").classList.add("open");
 }
 
@@ -1087,6 +1216,7 @@ async function sauvegarder() {
     tags:             document.getElementById("f-tags").value.split(",").map(s=>s.trim()).filter(Boolean),
     fichier:          document.getElementById("f-fichier").value.trim() || null,
     commentaire:      document.getElementById("f-commentaire").value.trim() || null,
+    proprietaire:     document.getElementById("f-proprietaire").value || null,
   };
   if (!payload.titre) { showToast("Le titre est obligatoire", true); return; }
 
@@ -1169,7 +1299,7 @@ function reinitialiserFiltres() {
   document.getElementById("filtreAnneeMin").value = "";
   document.getElementById("filtreAnneeMax").value = "";
   document.getElementById("triSelect").value = "titre";
-  filters = { type: "", statut: "", tag: "", q: "", tri: "titre" };
+  filters = { type: "", statut: "", tag: "", q: "", tri: "titre", proprietaire: "" };
   // Réinitialiser les boutons sidebar
   document.querySelectorAll(".filter-item").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".filter-item[data-val='']").forEach(b => b.classList.add("active"));

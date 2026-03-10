@@ -1,5 +1,5 @@
 # 📚 PROJET BIBLIOTHÈQUE PERSONNELLE — Document mémoire
-*Dernière mise à jour : 28 février 2026*
+*Dernière mise à jour : 11 mars 2026*
 
 ---
 
@@ -65,7 +65,10 @@ ressources (id, type_id, titre, serie, isbn, date_publication,
             editeur, pages, langue, localisation, statut_id,
             fichier, narrateur, duree, plateforme, format,
             lu, commentaire, couverture, lien_amazon, lien_fnac,
-            date_ajout, source)
+            date_ajout, source, proprietaire_id)
+
+-- Propriétaires (ajouté 11/03/2026)
+proprietaires (id, nom)     -- Kim, Lana, Jac, Sof, Invité + liste configurable depuis l'interface
 
 -- Tables de référence
 types      (id, libelle)       -- livre_papier, audio, ebook, pdf, article, bd, film, jeu_video
@@ -101,12 +104,15 @@ ressources_fts       (id, titre, auteurs, tags, commentaire)
 | GET | `/api/stats` | Statistiques globales |
 | GET | `/api/types` | Liste des types avec compteurs |
 | GET | `/api/tags` | Liste des tags avec compteurs |
-| GET | `/api/rechercher` | Recherche multicritères |
+| GET | `/api/rechercher` | Recherche multicritères (q, type, statut, tag, auteur, langue, localisation, proprietaire) |
 | GET | `/api/ressource/<id>` | Fiche complète |
 | POST | `/api/ressource` | Ajout |
 | PUT | `/api/ressource/<id>` | Modification |
 | DELETE | `/api/ressource/<id>` | Suppression |
 | GET | `/api/isbn/<isbn>` | Lookup ISBN (Open Library + Google Books) |
+| GET | `/api/proprietaires` | Liste des propriétaires |
+| POST | `/api/proprietaires` | Ajouter un propriétaire |
+| DELETE | `/api/proprietaires/<id>` | Supprimer un propriétaire |
 
 ---
 
@@ -143,6 +149,8 @@ ressources_fts       (id, titre, auteurs, tags, commentaire)
 - Tests utilisateur : ajout ✅, suppression ✅, filtres ✅, recherche ✅
 - Modifier ✅ (bug corrigé : `currentRessource` remis à null trop tôt)
 - À valider : lookup ISBN, accès téléphone (404 à élucider)
+- ✅ **11/03/2026** : Champ Propriétaire ajouté (filtre sidebar + gestion liste depuis l'interface)
+- ✅ **11/03/2026** : Scan ISBN par caméra mobile (html5-qrcode, sans installation pip)
 
 ### Étape 6 — À faire
 - Moteur de recherche fulltext (FTS5 déjà en place côté DB, à brancher finement)
@@ -151,7 +159,7 @@ ressources_fts       (id, titre, auteurs, tags, commentaire)
 
 ### Étape 7 — Évolutions futures
 - Synchronisation Proton Drive (rclone)
-- Scan ISBN depuis mobile
+- ~~Scan ISBN depuis mobile~~ ✅ Fait le 11/03/2026
 - Export bibliographique (BibTeX, RIS)
 
 ---
@@ -183,6 +191,12 @@ ressources_fts       (id, titre, auteurs, tags, commentaire)
 - Les filtres sidebar fonctionnent grâce à la table relationnelle `ressource_tags` — un champ texte JSON ne permettrait pas de filtrer proprement
 - Bug Modifier corrigé : `fermerFiche()` remettait `currentRessource = null` avant que `ouvrirFormulaire()` puisse l'utiliser → sauvegarde de la variable avant l'appel
 - Le bouton ＋ Ajouter a été déplacé du header (invisible sur fond noir) vers la toolbar crème
+
+---
+
+- **11/03/2026** : Champ Propriétaire — migration automatique DB existante, liste configurable via ⚙ dans la sidebar
+- **11/03/2026** : Scan ISBN caméra — html5-qrcode via CDN, bouton 📷 dans le formulaire, fonctionne sur mobile
+- **Note** : l'ancien `proprietaires.json` n'est plus utilisé — tout est en DB SQLite
 
 ---
 

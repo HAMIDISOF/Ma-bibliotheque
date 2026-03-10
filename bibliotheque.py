@@ -27,12 +27,33 @@ STATUTS_VALIDES = ["possédé", "souhaité", "prêté", "lu", "abandonné"]
 # ══════════════════════════════════════════════════════════════════════════════
 class Bibliotheque:
 
+    PROPRIETAIRES_DEFAUT = ["Kim", "Lana", "Jac", "Sof", "Invité"]
+
     def __init__(self, db_file=DB_FILE):
         self.db_file = db_file
         self.con = sqlite3.connect(db_file)
         self.con.row_factory = sqlite3.Row
         self.con.execute("PRAGMA foreign_keys = ON")
         self.con.execute("PRAGMA journal_mode = WAL")
+        self._migrer_proprietaires()
+
+    def _migrer_proprietaires(self):
+        """Crée la table propriétaires et ajoute la colonne si nécessaire."""
+        cur = self.con.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS proprietaires (
+                id  INTEGER PRIMARY KEY AUTOINCREMENT,
+                nom TEXT NOT NULL UNIQUE
+            )
+        """)
+        count = cur.execute("SELECT COUNT(*) FROM proprietaires").fetchone()[0]
+        if count == 0:
+            for nom in self.PROPRIETAIRES_DEFAUT:
+                cur.execute("INSERT OR IGNORE INTO proprietaires (nom) VALUES (?)", (nom,))
+        cols = [r[1] for r in cur.execute("PRAGMA table_info(ressources)").fetchall()]
+        if "proprietaire_id" not in cols:
+            cur.execute("ALTER TABLE ressources ADD COLUMN proprietaire_id INTEGER REFERENCES proprietaires(id)")
+        self.con.commit()
 
     def close(self):
         self.con.close()
@@ -96,6 +117,12 @@ class Bibliotheque:
             JOIN tags t ON t.id = rt.tag_id
             WHERE rt.ressource_id = ?
         """, (d["id"],))]
+        pid = d.get("proprietaire_id")
+        if pid:
+            row = cur.execute("SELECT nom FROM proprietaires WHERE id=?", (pid,)).fetchone()
+            d["proprietaire"] = row[0] if row else None
+        else:
+            d["proprietaire"] = None
         return d
 
     # ── AJOUTER ───────────────────────────────────────────────────────────────
@@ -106,7 +133,8 @@ class Bibliotheque:
                 langue=None, localisation=None, fichier=None,
                 narrateur=None, duree=None, plateforme=None,
                 format_res=None, commentaire=None, couverture=None,
-                lien_amazon=None, lien_fnac=None, source="manuel"):
+                lien_amazon=None, lien_fnac=None, source="manuel",
+                proprietaire=None):
         """Ajoute une nouvelle ressource. Retourne l'ID créé."""
 
         if type_res not in TYPES_VALIDES:
@@ -124,14 +152,15 @@ class Bibliotheque:
             (id, type_id, titre, serie, isbn, date_publication, editeur,
              pages, langue, localisation, statut_id, fichier, narrateur,
              duree, plateforme, format, lu, commentaire, couverture,
-             lien_amazon, lien_fnac, date_ajout, source)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+             lien_amazon, lien_fnac, date_ajout, source, proprietaire_id)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             rid, type_id, titre, serie, isbn, date_publication, editeur,
             pages, langue, localisation, statut_id, fichier, narrateur,
             duree, plateforme, format_res, None, commentaire, couverture,
             lien_amazon, lien_fnac,
-            datetime.today().strftime("%Y-%m-%d"), source
+            datetime.today().strftime("%Y-%m-%d"), source,
+            self._get_proprietaire_id(proprietaire)
         ))
 
         for nom in (auteurs or []):
@@ -188,6 +217,11 @@ class Bibliotheque:
             statut_id = self._get_or_create("statuts", "libelle", kwargs["statut"])
             cur.execute("UPDATE ressources SET statut_id = ? WHERE id = ?", (statut_id, ressource_id))
 
+        # Propriétaire
+        if "proprietaire" in kwargs:
+            pid = self._get_proprietaire_id(kwargs["proprietaire"])
+            cur.execute("UPDATE ressources SET proprietaire_id = ? WHERE id = ?", (pid, ressource_id))
+
         # Auteurs (remplacement complet)
         if "auteurs" in kwargs:
             cur.execute("DELETE FROM ressource_auteurs WHERE ressource_id = ?", (ressource_id,))
@@ -236,7 +270,8 @@ class Bibliotheque:
 
     def rechercher(self, query=None, type_res=None, statut=None,
                    tag=None, auteur=None, langue=None, localisation=None,
-                   annee_min=None, annee_max=None, tri="titre", limit=200):
+                   annee_min=None, annee_max=None, tri="titre", limit=200,
+                   proprietaire=None):
         """
         Recherche multicritères.
         query        : fulltext (titre, auteurs, tags, commentaire)
@@ -309,6 +344,12 @@ class Bibliotheque:
                 )
             """
             params.append(f"%{auteur}%")
+        if proprietaire:
+            sql += """ AND r.proprietaire_id IN (
+                SELECT id FROM proprietaires WHERE nom = ?
+            )
+            """
+            params.append(proprietaire)
 
         # Tri
         ordre = {
@@ -446,6 +487,37 @@ class Bibliotheque:
         s["nb_auteurs"] = cur.execute("SELECT COUNT(*) FROM auteurs").fetchone()[0]
         s["nb_tags"]    = cur.execute("SELECT COUNT(*) FROM tags").fetchone()[0]
         return s
+    
+    # ── PROPRIÉTAIRES ─────────────────────────────────────────────────────────
+
+    def _get_proprietaire_id(self, nom):
+        if not nom:
+            return None
+        cur = self.con.cursor()
+        row = cur.execute("SELECT id FROM proprietaires WHERE nom=?", (nom,)).fetchone()
+        return row[0] if row else None
+
+    def lister_proprietaires(self):
+        cur = self.con.cursor()
+        rows = cur.execute("SELECT id, nom FROM proprietaires ORDER BY nom").fetchall()
+        return [{"id": r[0], "nom": r[1]} for r in rows]
+
+    def ajouter_proprietaire(self, nom):
+        nom = nom.strip()
+        if not nom:
+            raise ValueError("Nom vide")
+        cur = self.con.cursor()
+        cur.execute("INSERT OR IGNORE INTO proprietaires (nom) VALUES (?)", (nom,))
+        self.con.commit()
+        row = cur.execute("SELECT id FROM proprietaires WHERE nom=?", (nom,)).fetchone()
+        return {"id": row[0], "nom": nom}
+
+    def supprimer_proprietaire(self, pid):
+        cur = self.con.cursor()
+        # Désassocier les ressources avant suppression
+        cur.execute("UPDATE ressources SET proprietaire_id=NULL WHERE proprietaire_id=?", (pid,))
+        cur.execute("DELETE FROM proprietaires WHERE id=?", (pid,))
+        self.con.commit()
 
 
 # ══════════════════════════════════════════════════════════════════════════════

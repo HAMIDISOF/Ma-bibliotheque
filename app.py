@@ -103,9 +103,10 @@ def api_rechercher():
             auteur      = p.get("auteur")       or None,
             langue      = p.get("langue")       or None,
             localisation= p.get("localisation") or None,
-            annee_min   = p.get("annee_min")    or None,
-            annee_max   = p.get("annee_max")    or None,
-            tri         = p.get("tri", "titre"),
+            annee_min       = p.get("annee_min")    or None,
+            annee_max       = p.get("annee_max")    or None,
+            tri             = p.get("tri", "titre"),
+            proprietaire    = p.get("proprietaire")  or None,
         )
         return ok(resultats)
 
@@ -146,6 +147,7 @@ def api_ajouter():
                 duree           = data.get("duree"),
                 commentaire     = data.get("commentaire"),
                 couverture      = data.get("couverture"),
+                proprietaire    = data.get("proprietaire"),
                 source          = "interface",
             )
             return ok({"id": rid})
@@ -168,6 +170,7 @@ def api_modifier(rid):
             if "statut"   in data:  champs["statut"]   = data["statut"]
             if "auteurs"  in data:  champs["auteurs"]  = data["auteurs"]
             if "tags"     in data:  champs["tags"]     = data["tags"]
+            if "proprietaire" in data: champs["proprietaire"] = data["proprietaire"]
             bib.modifier(rid, **champs)
             return ok({"id": rid})
     except ValueError as e:
@@ -182,6 +185,32 @@ def api_supprimer(rid):
             return ok({"supprimé": rid})
     except ValueError as e:
         return err(str(e))
+
+
+# ── PROPRIÉTAIRES ────────────────────────────────────────────────────────────
+
+@app.route("/api/proprietaires")
+def api_proprietaires():
+    with Bibliotheque(DB_FILE) as bib:
+        return ok(bib.lister_proprietaires())
+
+@app.route("/api/proprietaires", methods=["POST"])
+def api_ajouter_proprietaire():
+    data = request.get_json(force=True)
+    nom = (data or {}).get("nom", "").strip()
+    if not nom:
+        return err("Nom requis")
+    try:
+        with Bibliotheque(DB_FILE) as bib:
+            return ok(bib.ajouter_proprietaire(nom))
+    except ValueError as e:
+        return err(str(e))
+
+@app.route("/api/proprietaires/<int:pid>", methods=["DELETE"])
+def api_supprimer_proprietaire(pid):
+    with Bibliotheque(DB_FILE) as bib:
+        bib.supprimer_proprietaire(pid)
+        return ok({"supprimé": pid})
 
 
 # ── ISBN ──────────────────────────────────────────────────────────────────────
