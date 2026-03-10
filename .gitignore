@@ -1,0 +1,26 @@
+# ── DONNÉES PERSONNELLES — NE JAMAIS PUSHER ──────────────────────────────────
+bibliotheque.db
+proprietaires.json
+abonnements.json
+memo_session.md
+*.db
+*.db-shm
+*.db-wal
+
+# ── PYTHON ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+.venv/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── DIVERS ───────────────────────────────────────────────────────────────────
+*.log
+*.tmp
