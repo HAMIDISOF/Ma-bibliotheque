@@ -1,4 +1,4 @@
-# ── DONNÉES PERSONNELLES — NE JAMAIS PUSHER ──────────────────────────────────
+# 🔒 DONNÉES PERSONNELLES — NE JAMAIS PUSHER
 bibliotheque.db
 proprietaires.json
 abonnements.json
@@ -6,8 +6,21 @@ memo_session.md
 *.db
 *.db-shm
 *.db-wal
+bibliotheque.json
+Proprietaire_anc.JSON
 
-# ── PYTHON ────────────────────────────────────────────────────────────────────
+# 🔒 SSL — JAMAIS SUR GIT
+ssl_cert.pem
+ssl_key.pem
+*.pem
+
+# 🔒 SAUVEGARDES ET VIEUX FICHIERS
+*_sav.py
+*_save*.py
+*_anc.*
+app_app*.py
+
+# 🐍 PYTHON
 __pycache__/
 *.pyc
 *.pyo
@@ -16,11 +29,12 @@ __pycache__/
 venv/
 .venv/
 
-# ── OS ────────────────────────────────────────────────────────────────────────
+# 💻 OS
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# ── DIVERS ───────────────────────────────────────────────────────────────────
+# 📝 DIVERS
 *.log
 *.tmp
+git_push_bibliotheque.md
