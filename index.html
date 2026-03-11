@@ -842,7 +842,7 @@ async function chargerProprietaires() {
   });
   // Populer la sidebar
   const sidebar = document.getElementById("filterProprietaires");
-  sidebar.innerHTML = '<button class="filter-item active" data-filter="proprietaire" data-val="" onclick="setFilter('proprietaire','',this)">Tous</button>';
+  sidebar.innerHTML = '<button class="filter-item active" data-filter="proprietaire" data-val="" onclick="setFilter(&apos;proprietaire&apos;,&apos;&apos;,this)">Tous</button>';
   proprietairesListe.forEach(p => {
     const btn = document.createElement("button");
     btn.className = "filter-item";

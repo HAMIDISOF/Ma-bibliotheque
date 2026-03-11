@@ -235,7 +235,13 @@ def _trouver_port():
 
 def _lancer_flask(port):
     """Lance Flask dans un thread daemon."""
-    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
+    ssl_cert = BASE_DIR / "ssl_cert.pem"
+    ssl_key  = BASE_DIR / "ssl_key.pem"
+    if ssl_cert.exists() and ssl_key.exists():
+        app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False,
+                ssl_context=(str(ssl_cert), str(ssl_key)))
+    else:
+        app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
 
 
 def main():
@@ -254,9 +260,21 @@ def main():
         s.close()
     except Exception:
         ip = "?"
+    proto = "https" if (BASE_DIR / "ssl_cert.pem").exists() else "http"
     print(f"📚 Ma Bibliothèque démarrée !")
-    print(f"   PC        → http://127.0.0.1:{port}")
-    print(f"   Téléphone → http://{ip}:{port}")
+    print(f"   PC        → {proto}://127.0.0.1:{port}")
+    print(f"   Téléphone → {proto}://{ip}:{port}")
+    print()
+    print(f"┌─────────────────────────────────────────────────────┐")
+    print(f"│  📱 PREMIÈRE FOIS sur un nouveau téléphone ?        │")
+    print(f"│                                                     │")
+    print(f"│  1. Ouvre Brave et tape :                           │")
+    print(f"│     {proto}://{ip}:{port}".ljust(53) + "│")
+    print(f"│  2. Clique  Avancé  →  Continuer vers le site      │")
+    print(f"│  3. Ensuite le QR Code fonctionne normalement !     │")
+    print(f"│                                                     │")
+    print(f"│  ⚠️  À faire UNE SEULE FOIS par téléphone           │")
+    print(f"└─────────────────────────────────────────────────────┘")
     if HAS_QR and ip != "?":
         print("\n   📱 Scanne ce QR Code avec ton téléphone :")
         qr = qrcode.QRCode(border=1)
@@ -272,9 +290,23 @@ def main():
         print("❌ pywebview non installé. Lance : pip install pywebview")
         print(f"   En attendant, ouvre http://127.0.0.1:{port} dans ton navigateur.")
         # Fallback : ouvre dans le navigateur par défaut
-        import webbrowser, time
+        import webbrowser, time, subprocess, os
         time.sleep(0.8)
-        webbrowser.open(f"http://127.0.0.1:{port}")
+        url = f"https://127.0.0.1:{port}"
+        navigateurs = [
+            r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+            r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe",
+            r"C:\Program Files\Opera\launcher.exe",
+            r"C:\Program Files (x86)\Opera\launcher.exe",
+        ]
+        ouvert = False
+        for nav in navigateurs:
+            if os.path.exists(nav):
+                subprocess.Popen([nav, url])
+                ouvert = True
+                break
+        if not ouvert:
+            webbrowser.open(url)
         input("Appuie sur Entrée pour quitter…")
         sys.exit(0)
 
