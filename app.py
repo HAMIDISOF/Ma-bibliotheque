@@ -244,6 +244,23 @@ def _lancer_flask(port):
         app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
 
 
+def _ouvrir_chrome(url):
+    """Ouvre Chrome sur l'URL donnée — cherche Chrome en priorité."""
+    import os, subprocess, webbrowser, time
+    time.sleep(1.0)  # laisse Flask démarrer
+    chemins_chrome = [
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
+    ]
+    for chemin in chemins_chrome:
+        if os.path.exists(chemin):
+            subprocess.Popen([chemin, f"--ignore-certificate-errors", url])
+            return
+    # Fallback : navigateur par défaut
+    webbrowser.open(url)
+
+
 def main():
     port = _trouver_port()
 
@@ -251,7 +268,7 @@ def main():
     t = threading.Thread(target=_lancer_flask, args=(port,), daemon=True)
     t.start()
 
-    # Affiche l IP locale pour accès téléphone
+    # Affiche l'IP locale pour accès téléphone
     import socket as _sock
     try:
         s = _sock.socket(_sock.AF_INET, _sock.SOCK_DGRAM)
@@ -261,24 +278,29 @@ def main():
     except Exception:
         ip = "?"
     proto = "https" if (BASE_DIR / "ssl_cert.pem").exists() else "http"
+
     print(f"📚 Ma Bibliothèque démarrée !")
-    print(f"   PC        → {proto}://127.0.0.1:{port}")
+    print(f"   PC        → {proto}://localhost:{port}")
     print(f"   Téléphone → {proto}://{ip}:{port}")
     print()
     print(f"┌─────────────────────────────────────────────────────┐")
     print(f"│  📱 PREMIÈRE FOIS sur un nouveau téléphone ?        │")
     print(f"│                                                     │")
-    print(f"│  1. Ouvre Brave et tape :                           │")
+    print(f"│  1. Ouvre Chrome et tape :                          │")
     print(f"│     {proto}://{ip}:{port}".ljust(53) + "│")
     print(f"│  2. Clique  Avancé  →  Continuer vers le site      │")
     print(f"│  3. Ensuite le QR Code fonctionne normalement !     │")
     print(f"│                                                     │")
-    print(f"│  ⚠️  À faire UNE SEULE FOIS par téléphone           │")
+    print(f"│  💡 Si réseau différent (ex: asso) → ipconfig      │")
+    print(f"│     pour connaître la nouvelle IP du PC             │")
+    print(f"│                                                     │")
+    print(f"│  ⚠️  À faire UNE SEULE FOIS par réseau              │")
     print(f"└─────────────────────────────────────────────────────┘")
+
     if HAS_QR and ip != "?":
         print("\n   📱 Scanne ce QR Code avec ton téléphone :")
         qr = qrcode.QRCode(border=1)
-        qr.add_data(f"http://{ip}:{port}")
+        qr.add_data(f"{proto}://{ip}:{port}")
         qr.make(fit=True)
         qr.print_ascii(invert=True)
     elif not HAS_QR:
@@ -286,43 +308,22 @@ def main():
 
     try:
         import webview
+        webview_ok = True
     except ImportError:
-        print("❌ pywebview non installé. Lance : pip install pywebview")
-        print(f"   En attendant, ouvre http://127.0.0.1:{port} dans ton navigateur.")
-        # Fallback : ouvre dans le navigateur par défaut
-        import webbrowser, time, subprocess, os
-        time.sleep(0.8)
-        url = f"https://127.0.0.1:{port}"
-        navigateurs = [
-            r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
-            r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe",
-            r"C:\Program Files\Opera\launcher.exe",
-            r"C:\Program Files (x86)\Opera\launcher.exe",
-        ]
-        ouvert = False
-        for nav in navigateurs:
-            if os.path.exists(nav):
-                subprocess.Popen([nav, url])
-                ouvert = True
-                break
-        if not ouvert:
-            webbrowser.open(url)
+        webview_ok = False
+
+    # Ouvre Chrome automatiquement sur localhost
+    url_pc = f"{proto}://localhost:{port}"
+    threading.Thread(target=_ouvrir_chrome, args=(url_pc,), daemon=True).start()
+
+    if not webview_ok:
+        print("❌ pywebview non installé — Chrome ouvert directement.")
         input("Appuie sur Entrée pour quitter…")
         sys.exit(0)
 
-    # Fenêtre pywebview — fermer la fenêtre = arrêt propre
-    window = webview.create_window(
-        title     = "📚 Ma Bibliothèque",
-        url       = f"http://127.0.0.1:{port}",
-        width     = 1280,
-        height    = 820,
-        min_size  = (800, 600),
-        resizable = True,
-    )
-    import sys as _sys
-    gui = "edgechromium" if _sys.platform == "win32" else None
-    webview.start(gui=gui)
-    # Quand start() retourne → la fenêtre a été fermée → le thread daemon s'arrête
+    # Garde le process vivant sans ouvrir de fenêtre pywebview
+    # (Chrome est déjà ouvert — on attend juste que l'utilisateur quitte)
+    input("✅ Bibliothèque démarrée — Appuie sur Entrée pour quitter…")
     print("👋 Au revoir !")
     sys.exit(0)
 

@@ -1079,7 +1079,7 @@ async function rechercher() {
   document.getElementById("gridView").innerHTML = data.map(r => `
     <div class="card" onclick="ouvrirFiche('${r.id}')">
       <div class="card-cover">
-        ${r.couverture
+        ${r.couverture && !r.couverture.startsWith('/MyLibrary/')
           ? `<img src="${r.couverture}" alt="" onerror="this.style.display='none'">`
           : `<div class="card-cover-placeholder">${ICONS[r.type] || "📦"}<span>${LABELS[r.type] || r.type}</span></div>`
         }
